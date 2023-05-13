@@ -124,13 +124,7 @@ int main(int argc, char **argv)
   auto nh = rclcpp::Node::make_shared("scan_to_scan_filter_chain");
   ScanToScanFilterChain t(nh);
 
-  rclcpp::WallRate loop_rate(200);
-  while (rclcpp::ok()) {
-
-    rclcpp::spin_some(nh);
-    loop_rate.sleep();
-
-  }
-
+  rclcpp::spin(nh);
+  rclcpp::shutdown();
   return 0;
 }
