@@ -50,23 +50,33 @@ include_directories(
 
 set(library_name scan_to_scan_filter_chain)
 
+add_library(laser_scan_filters SHARED src/laser_scan_filters.cpp)
+
 add_library(${library_name} SHARED
   src/scan_to_scan_filter_chain.cpp
+)
+target_link_libraries(${library_name}
+  laser_scan_filters
 )
 
 ament_target_dependencies(${library_name}
   ${dependencies}
 )
 
+ament_target_dependencies(laser_scan_filters
+  ${dependencies}
+)
+
 rclcpp_components_register_nodes(${library_name} "ScanToScanFilterChain")
 
-install(TARGETS ${library_name}
+install(TARGETS ${library_name} laser_scan_filters
   LIBRARY DESTINATION lib
 )
 
 # export libraries
+pluginlib_export_plugin_description_file(filters laser_filters_plugins.xml)
 ament_export_include_directories(include)
-ament_export_libraries(${library_name}) 
+ament_export_libraries(${library_name} laser_scan_filters) 
 ament_export_dependencies(${dependencies})
 
 ##############################################################################
