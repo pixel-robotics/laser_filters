@@ -1,34 +1,83 @@
 cmake_minimum_required(VERSION 3.5)
 project(laser_filters)
 
+# NOTE
+# this modified version only builds the component for scan_to_scan_filter_chain
+# the other executables and components are NOT built as we don't use them
+
 ##############################################################################
 # Find dependencies
 ##############################################################################
 
 find_package(ament_cmake_auto REQUIRED)
-ament_auto_find_build_dependencies()
+find_package(rclcpp_components REQUIRED)
+find_package(angles REQUIRED)
+find_package(laser_geometry REQUIRED)
+find_package(message_filters REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(filters REQUIRED)
 
+
+set(dependencies
+    angles
+    filters
+    laser_geometry
+    message_filters
+    pluginlib
+    rclcpp
+    rclcpp_components
+    rclcpp_lifecycle
+    sensor_msgs
+    tf2
+    tf2_ros
+)
+
+
+include_directories(
+  include
+)
 ##############################################################################
 # Build
 ##############################################################################
 
-ament_auto_add_library(laser_scan_filters SHARED src/laser_scan_filters.cpp)
 
-set(FILTER_CHAINS
-    scan_to_cloud_filter_chain
-    scan_to_scan_filter_chain
-    generic_laser_filter_node
+
+set(library_name scan_to_scan_filter_chain)
+
+add_library(laser_scan_filters SHARED src/laser_scan_filters.cpp)
+
+add_library(${library_name} SHARED
+  src/scan_to_scan_filter_chain.cpp
 )
-foreach(FILTER_CHAIN ${FILTER_CHAINS})
-    ament_auto_add_executable(${FILTER_CHAIN} src/${FILTER_CHAIN}.cpp)
-endforeach()
+target_link_libraries(${library_name}
+  laser_scan_filters
+)
 
-##############################################################################
-# Install
-##############################################################################
+ament_target_dependencies(${library_name}
+  ${dependencies}
+)
 
+ament_target_dependencies(laser_scan_filters
+  ${dependencies}
+)
+
+rclcpp_components_register_nodes(${library_name} "ScanToScanFilterChain")
+
+install(TARGETS ${library_name} laser_scan_filters
+  LIBRARY DESTINATION lib
+)
+
+# export libraries
 pluginlib_export_plugin_description_file(filters laser_filters_plugins.xml)
-ament_auto_package(INSTALL_TO_SHARE examples)
+ament_export_include_directories(include)
+ament_export_libraries(${library_name} laser_scan_filters) 
+ament_export_dependencies(${dependencies})
 
 ##############################################################################
 # Test
@@ -63,3 +112,5 @@ if(BUILD_TESTING)
         RESULT_FILE ${RESULT_FILENAME}
     )
 endif()
+
+ament_package()
